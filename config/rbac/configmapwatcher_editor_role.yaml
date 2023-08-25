@@ -1,0 +1,31 @@
+# permissions for end users to edit configmapwatchers.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: configmapwatcher-editor-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: configmap
+    app.kubernetes.io/part-of: configmap
+    app.kubernetes.io/managed-by: kustomize
+  name: configmapwatcher-editor-role
+rules:
+- apiGroups:
+  - configmap.xinyu.com
+  resources:
+  - configmapwatchers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - configmap.xinyu.com
+  resources:
+  - configmapwatchers/status
+  verbs:
+  - get

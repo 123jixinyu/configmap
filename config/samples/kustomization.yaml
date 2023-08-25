@@ -1,0 +1,4 @@
+## Append samples of your project ##
+resources:
+- configmap_v1_configmapwatcher.yaml
+#+kubebuilder:scaffold:manifestskustomizesamples

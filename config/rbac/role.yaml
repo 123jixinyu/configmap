@@ -1,0 +1,45 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - '*'
+  resources:
+  - configmaps
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - configmap.xinyu.com
+  resources:
+  - configmapwatchers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - configmap.xinyu.com
+  resources:
+  - configmapwatchers/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - configmap.xinyu.com
+  resources:
+  - configmapwatchers/status
+  verbs:
+  - get
+  - patch
+  - update

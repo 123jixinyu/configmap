@@ -1,0 +1,12 @@
+apiVersion: configmap.xinyu.com/v1
+kind: ConfigMapWatcher
+metadata:
+  labels:
+    app.kubernetes.io/name: configmapwatcher
+    app.kubernetes.io/instance: configmapwatcher-sample
+    app.kubernetes.io/part-of: configmap
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: configmap
+  name: configmapwatcher-sample
+spec:
+  # TODO(user): Add fields here
