@@ -7,7 +7,7 @@ rules:
 - apiGroups:
   - '*'
   resources:
-  - configmaps
+  - configmaps，pods
   verbs:
   - create
   - delete

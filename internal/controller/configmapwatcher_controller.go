@@ -21,7 +21,10 @@ import (
 	"context"
 	"fmt"
 	coreV1 "k8s.io/api/core/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -40,7 +43,7 @@ type ConfigMapWatcherReconciler struct {
 //+kubebuilder:rbac:groups=configmap.xinyu.com,resources=configmapwatchers,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=configmap.xinyu.com,resources=configmapwatchers/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=configmap.xinyu.com,resources=configmapwatchers/finalizers,verbs=update
-//+kubebuilder:rbac:groups=*,resources=configmaps,verbs=create;delete;deletecollection;get;list;patch;update;watch
+//+kubebuilder:rbac:groups=*,resources=configmaps，pods,verbs=create;delete;deletecollection;get;list;patch;update;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -60,34 +63,70 @@ func (r *ConfigMapWatcherReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, nil
 	}
 
-	logger.Info("Reconcile: " + configMapWatcher.Name)
+	logger.Info("Own CRD Resource Reconcile", "name", configMapWatcher.Name, "namespace", configMapWatcher.Namespace)
 
 	return ctrl.Result{}, nil
 }
 
-type MyEventHandler struct{}
-
-func (*MyEventHandler) Create(ctx context.Context, createEvent event.CreateEvent, limitingInterface workqueue.RateLimitingInterface) {
-
-	configMap := createEvent.Object.DeepCopyObject().(*coreV1.ConfigMap)
-
-	fmt.Println(configMap.Name)
+type ConfigMapEventHandler struct {
+	DynamicClient *dynamic.DynamicClient
 }
 
-func (*MyEventHandler) Update(ctx context.Context, updateEvent event.UpdateEvent, limitingInterface workqueue.RateLimitingInterface) {
+func (c *ConfigMapEventHandler) Create(ctx context.Context, createEvent event.CreateEvent, limitingInterface workqueue.RateLimitingInterface) {
+
+	podResource := schema.GroupVersionResource{Group: "", Version: "v1", Resource: "pods"}
+
+	nginxPodName := "test-pod2"
+	namespace := "test"
+
+	_, err := c.DynamicClient.Resource(podResource).Namespace(namespace).Get(ctx, nginxPodName, v1.GetOptions{})
+	if err == nil {
+		return
+	}
+
+	nginxPod := &unstructured.Unstructured{
+		Object: map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "Pod",
+			"metadata": map[string]interface{}{
+				"name":      nginxPodName,
+				"namespace": namespace,
+			},
+			"spec": map[string]interface{}{
+				"containers": []map[string]interface{}{
+					{"name": "nginx", "image": "nginx:1.14.2"},
+				},
+			},
+		},
+	}
+
+	_, err = c.DynamicClient.Resource(podResource).Namespace(namespace).Create(ctx, nginxPod, v1.CreateOptions{})
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
-func (*MyEventHandler) Delete(ctx context.Context, deleteEvent event.DeleteEvent, limitingInterface workqueue.RateLimitingInterface) {
+func (*ConfigMapEventHandler) Update(ctx context.Context, updateEvent event.UpdateEvent, limitingInterface workqueue.RateLimitingInterface) {
+
+	configMap := updateEvent.ObjectNew.DeepCopyObject().(*coreV1.ConfigMap)
+
+	logger := log.FromContext(ctx)
+
+	logger.Info("ConfigMap Changed", "name", configMap.Name, "namespace", configMap.Namespace)
 
 }
 
-func (*MyEventHandler) Generic(ctx context.Context, genericEvent event.GenericEvent, limitingInterface workqueue.RateLimitingInterface) {
+func (*ConfigMapEventHandler) Delete(ctx context.Context, deleteEvent event.DeleteEvent, limitingInterface workqueue.RateLimitingInterface) {
+
+}
+
+func (*ConfigMapEventHandler) Generic(ctx context.Context, genericEvent event.GenericEvent, limitingInterface workqueue.RateLimitingInterface) {
 
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *ConfigMapWatcherReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&configmapv1.ConfigMapWatcher{}).Watches(&coreV1.ConfigMap{}, &MyEventHandler{}).
+		For(&configmapv1.ConfigMapWatcher{}).Watches(&coreV1.ConfigMap{}, &ConfigMapEventHandler{r.DynamicClient}).
 		Complete(r)
 }
