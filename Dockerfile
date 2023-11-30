@@ -2,7 +2,8 @@
 FROM golang:1.20 as builder
 ARG TARGETOS
 ARG TARGETARCH
-
+ENV GOPROXY https://goproxy.cn
+ENV GO111MODULE on
 WORKDIR /workspace
 # Copy the Go Modules manifests
 COPY go.mod go.mod
@@ -14,6 +15,7 @@ RUN go mod download
 # Copy the go source
 COPY cmd/main.go cmd/main.go
 COPY api/ api/
+COPY domain/ domain/
 COPY internal/controller/ internal/controller/
 
 # Build
@@ -25,9 +27,9 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a -o ma
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
-FROM gcr.io/distroless/static:nonroot
+FROM golang:1.20
 WORKDIR /
 COPY --from=builder /workspace/manager .
 USER 65532:65532
-
+ENV TZ=Asia/Shanghai
 ENTRYPOINT ["/manager"]

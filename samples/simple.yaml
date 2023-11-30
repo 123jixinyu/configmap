@@ -1,0 +1,13 @@
+apiVersion: configmap.xinyu.com/v1
+kind: ConfigMapWatcher
+metadata:
+  name: demo
+  namespace: test
+spec:
+  ossConfig:
+    endpoint: your endpoint
+    accessKey: your key
+    accessSecret:  your secret
+    bucket: your bucket
+    directory: your directory
+  scheduler: "*/1 * * * *"

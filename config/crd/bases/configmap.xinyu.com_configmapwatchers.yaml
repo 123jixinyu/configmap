@@ -34,10 +34,31 @@ spec:
           spec:
             description: ConfigMapWatcherSpec defines the desired state of ConfigMapWatcher
             properties:
-              foo:
+              ossConfig:
                 description: Foo is an example field of ConfigMapWatcher. Edit configmapwatcher_types.go
                   to remove/update
+                properties:
+                  accessKey:
+                    type: string
+                  accessSecret:
+                    type: string
+                  bucket:
+                    type: string
+                  directory:
+                    type: string
+                  endpoint:
+                    type: string
+                required:
+                - accessKey
+                - accessSecret
+                - bucket
+                - endpoint
+                type: object
+              scheduler:
                 type: string
+            required:
+            - ossConfig
+            - scheduler
             type: object
           status:
             description: ConfigMapWatcherStatus defines the observed state of ConfigMapWatcher

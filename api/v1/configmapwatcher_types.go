@@ -29,7 +29,16 @@ type ConfigMapWatcherSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Foo is an example field of ConfigMapWatcher. Edit configmapwatcher_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	OssConfig OssConfig `json:"ossConfig"`
+	Scheduler string    `json:"scheduler"`
+}
+
+type OssConfig struct {
+	Endpoint     string `json:"endpoint"`
+	AccessKey    string `json:"accessKey"`
+	AccessSecret string `json:"accessSecret"`
+	Bucket       string `json:"bucket"`
+	Directory    string `json:"directory,omitempty"`
 }
 
 // ConfigMapWatcherStatus defines the observed state of ConfigMapWatcher

@@ -5,9 +5,9 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - '*'
+  - ""
   resources:
-  - configmaps，pods
+  - configmaps
   verbs:
   - create
   - delete
